@@ -18,7 +18,7 @@ func Middleware(repo Repository, cfg *config.Config) func(http.Handler) http.Han
 			}
 
 			parts := strings.SplitN(authHeader, " ", 2)
-			if len(parts) != 2 || !strings.EqualFold(parts[0], "Basic") {
+			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
 				writeError(w, http.StatusUnauthorized, "Invalid authorization header format")
 				return
 			}

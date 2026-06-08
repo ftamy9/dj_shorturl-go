@@ -11,12 +11,20 @@ A URL shortener with custom authentication token system, ported from Django to G
 
 ## Quick Start (local dev with SQLite)
 
+### 0. Init (clean slate)
+
+```cmd
+del C:\Users\farhan\Documents\src\golang\dj_shorturl-go\dj_shorturl-go.db*
+```
+
+### 1. Start server
+
 ```cmd
 cd C:\Users\farhan\Documents\src\golang\dj_shorturl-go
 set DB_DRIVER=sqlite3
 set SQL_DATABASE=dj_shorturl-go.db
-set AUTH_SECRET=change-me-auth
-set PASSWORD_SECRET=change-me-password
+set AUTH_SECRET=dev-auth-secret-change-in-production
+set PASSWORD_SECRET=dev-password-secret-change-in-production
 set SERVER_PORT=8000
 dj_shorturl-go.exe
 ```
@@ -24,17 +32,19 @@ dj_shorturl-go.exe
 Or in one line (cmd.exe from anywhere):
 
 ```cmd
-cmd /c "cd /d C:\Users\farhan\Documents\src\golang\dj_shorturl-go & set DB_DRIVER=sqlite3& set SQL_DATABASE=dj_shorturl-go.db& set AUTH_SECRET=change-me-auth& set PASSWORD_SECRET=change-me-password& set SERVER_PORT=8000& dj_shorturl-go.exe"
+cmd /c "cd /d C:\Users\farhan\Documents\src\golang\dj_shorturl-go & set DB_DRIVER=sqlite3& set SQL_DATABASE=dj_shorturl-go.db& set AUTH_SECRET=dev-auth-secret-change-in-production& set PASSWORD_SECRET=dev-password-secret-change-in-production& set SERVER_PORT=8000& dj_shorturl-go.exe"
 ```
+
+> **Production:** Change `AUTH_SECRET` and `PASSWORD_SECRET` to random secure values. Anyone with these secrets can forge tokens and passwords.
 
 ## API Endpoints
 
-All examples use `curl.exe` (works in both PowerShell and cmd.exe).
+All examples use `curl.exe`.
 
 ### Create User (POST /user/signup, no auth required)
 
-```powershell
-curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
+```cmd
+curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
 ```
 
 Response:
@@ -44,8 +54,8 @@ Response:
 
 ### Login (PUT /user/signup, no auth required)
 
-```powershell
-curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
+```cmd
+curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
 ```
 
 Response:
@@ -55,8 +65,8 @@ Response:
 
 ### Create Short URL (POST /shorter/url, auth required)
 
-```powershell
-curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d '{\"url\":\"https://example.com\"}'
+```cmd
+curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d "{\"url\":\"https://example.com\"}"
 ```
 
 Response:
@@ -66,29 +76,29 @@ Response:
 
 ### Follow Redirect (GET /shorter/url/{uuid}, no auth required)
 
-```powershell
+```cmd
 curl.exe -v http://localhost:8000/shorter/url/<uuid>
 ```
 
 Returns 302 Found redirecting to the original URL.
 
-## Full Flow Example (PowerShell - one-liners)
+## Full Flow
 
-```powershell
-# 1. Signup
-curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
+```cmd
+REM 1. Signup
+curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
 
-# 2. Login — save the token from response
-curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
+REM 2. Login — save the token from response
+curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
 
-# 3. Create short URL — replace <token> with value from step 2
-curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d '{\"url\":\"https://example.com\"}'
+REM 3. Create short URL — replace <token> with value from step 2
+curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d "{\"url\":\"https://example.com\"}"
 
-# 4. Follow redirect — replace <uuid> with id from step 3
+REM 4. Follow redirect — replace <uuid> with id from step 3
 curl.exe -v http://localhost:8000/shorter/url/<uuid>
 ```
 
-## Full Flow Example (PowerShell - with variables)
+## Full Flow (PowerShell - with variables)
 
 ```powershell
 # 1. Signup
