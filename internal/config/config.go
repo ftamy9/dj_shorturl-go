@@ -3,9 +3,11 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
+	DBDriver      string
 	DBHost        string
 	DBPort        string
 	DBUser        string
@@ -20,6 +22,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
+		DBDriver:       getEnv("DB_DRIVER", "postgres"),
 		DBHost:         getEnv("SQL_HOST", "localhost"),
 		DBPort:         getEnv("SQL_PORT", "5432"),
 		DBUser:         getEnv("SQL_USER", "surl_u"),
@@ -35,7 +38,7 @@ func Load() *Config {
 
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
-		return v
+		return strings.TrimSpace(v)
 	}
 	return fallback
 }

@@ -2,9 +2,11 @@ package shortener
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -13,18 +15,20 @@ type Repository interface {
 }
 
 type PostgresRepository struct {
-	pool *pgxpool.Pool
+	db *sql.DB
 }
 
-func NewRepository(pool *pgxpool.Pool) Repository {
-	return &PostgresRepository{pool: pool}
+func NewRepository(db *sql.DB) Repository {
+	return &PostgresRepository{db: db}
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, addr *Address) error {
-	err := r.pool.QueryRow(ctx,
-		`INSERT INTO addresses (url, created_at) VALUES ($1, NOW()) RETURNING id, created_at`,
-		addr.URL,
-	).Scan(&addr.ID, &addr.CreatedAt)
+	addr.ID = uuid.New().String()
+	addr.CreatedAt = time.Now()
+	_, err := r.db.ExecContext(ctx,
+		`INSERT INTO addresses (id, url, created_at) VALUES ($1, $2, $3)`,
+		addr.ID, addr.URL, addr.CreatedAt,
+	)
 	if err != nil {
 		return fmt.Errorf("create address: %w", err)
 	}
@@ -33,7 +37,7 @@ func (r *PostgresRepository) Create(ctx context.Context, addr *Address) error {
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*Address, error) {
 	addr := &Address{}
-	err := r.pool.QueryRow(ctx,
+	err := r.db.QueryRowContext(ctx,
 		`SELECT id, url, created_at FROM addresses WHERE id = $1`,
 		id,
 	).Scan(&addr.ID, &addr.URL, &addr.CreatedAt)

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ftamy9/dj_shorturl/internal/config"
+	"github.com/ftamy9/dj_shorturl-go/internal/config"
 )
 
 func Middleware(repo Repository, cfg *config.Config) func(http.Handler) http.Handler {

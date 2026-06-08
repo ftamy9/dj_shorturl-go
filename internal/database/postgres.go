@@ -1,32 +1,28 @@
 package database
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
-	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/ftamy9/dj_shorturl/internal/config"
+	"github.com/ftamy9/dj_shorturl-go/internal/config"
 )
 
-func Connect(cfg *config.Config) (*pgxpool.Pool, error) {
+func OpenPostgres(cfg *config.Config) (*sql.DB, error) {
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	pool, err := pgxpool.New(ctx, dsn)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create connection pool: %w", err)
+		return nil, fmt.Errorf("open postgres: %w", err)
 	}
 
-	if err := pool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("unable to ping database: %w", err)
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
 
-	return pool, nil
+	return db, nil
 }

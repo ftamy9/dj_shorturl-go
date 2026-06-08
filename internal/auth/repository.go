@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-
-	"github.com/jackc/pgx/v5/pgxpool"
+	"time"
 )
 
 type Repository interface {
@@ -13,17 +13,18 @@ type Repository interface {
 }
 
 type PostgresRepository struct {
-	pool *pgxpool.Pool
+	db *sql.DB
 }
 
-func NewRepository(pool *pgxpool.Pool) Repository {
-	return &PostgresRepository{pool: pool}
+func NewRepository(db *sql.DB) Repository {
+	return &PostgresRepository{db: db}
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, user *BaseUser) error {
-	_, err := r.pool.Exec(ctx,
-		`INSERT INTO base_users (id, password_hash, create_date) VALUES ($1, $2, NOW())`,
-		user.ID, user.PasswordHash,
+	user.CreateDate = time.Now()
+	_, err := r.db.ExecContext(ctx,
+		`INSERT INTO base_users (id, password_hash, create_date) VALUES ($1, $2, $3)`,
+		user.ID, user.PasswordHash, user.CreateDate,
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
@@ -33,7 +34,7 @@ func (r *PostgresRepository) Create(ctx context.Context, user *BaseUser) error {
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*BaseUser, error) {
 	user := &BaseUser{}
-	err := r.pool.QueryRow(ctx,
+	err := r.db.QueryRowContext(ctx,
 		`SELECT id, password_hash, create_date FROM base_users WHERE id = $1`,
 		id,
 	).Scan(&user.ID, &user.PasswordHash, &user.CreateDate)

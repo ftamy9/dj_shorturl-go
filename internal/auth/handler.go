@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ftamy9/dj_shorturl/internal/config"
+	"github.com/ftamy9/dj_shorturl-go/internal/config"
 )
 
 type Handler struct {

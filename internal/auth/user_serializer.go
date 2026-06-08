@@ -11,7 +11,7 @@ type SignupResponse struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"toke"`
+	Token string `json:"token"`
 }
 
 type ErrorResponse struct {

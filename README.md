@@ -1,69 +1,141 @@
-# dj_shorturl - Go Port
+# dj_shorturl-go
 
 A URL shortener with custom authentication token system, ported from Django to Go.
 
 ## Features
 
-- Custom authentication token (not JWT, not as secure - educational)
+- Custom authentication token (HMAC-SHA256 + blake2b, educational)
 - URL shortening with UUID-based identifiers
-- PostgreSQL database
-- Docker Compose setup
+- SQLite (local dev) or PostgreSQL (production)
+- CGO-free SQLite support via cross-compilation
+
+## Quick Start (local dev with SQLite)
+
+```cmd
+cd C:\Users\farhan\Documents\src\golang\dj_shorturl-go
+set DB_DRIVER=sqlite3
+set SQL_DATABASE=dj_shorturl-go.db
+set AUTH_SECRET=change-me-auth
+set PASSWORD_SECRET=change-me-password
+set SERVER_PORT=8000
+dj_shorturl-go.exe
+```
+
+Or in one line (cmd.exe from anywhere):
+
+```cmd
+cmd /c "cd /d C:\Users\farhan\Documents\src\golang\dj_shorturl-go & set DB_DRIVER=sqlite3& set SQL_DATABASE=dj_shorturl-go.db& set AUTH_SECRET=change-me-auth& set PASSWORD_SECRET=change-me-password& set SERVER_PORT=8000& dj_shorturl-go.exe"
+```
 
 ## API Endpoints
 
-All endpoints return JSON. Replace `SERVER-OR-LOCAL-IP` with your server.
-
-### Create User (no auth required)
+### Create User (POST /user/signup, no auth required)
 
 ```bash
-curl -X POST -d '{ "id": "farhan_10", "password_hash": "123" }' \
-  -H "Content-Type: application/json" \
-  http://SERVER-OR-LOCAL-IP:80/user/signup
+curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
 ```
 
-### Login (get token)
-
-```bash
-curl -i -X PUT -d '{ "id": "farhan_10", "password_hash": "123" }' \
-  -H "Content-Type: application/json" \
-  http://SERVER-OR-LOCAL-IP:80/user/signup
+Response:
+```json
+{"id":"alice","password_hash":"ok***hash"}
 ```
 
-### Create Short URL (requires auth)
+### Login (PUT /user/signup, no auth required)
 
 ```bash
-curl -i -X POST -d '{ "url": "http://icanhazip.com" }' \
-  -H "Authorization: Basic <token>" \
-  -H "Content-Type: application/json" \
-  http://SERVER-OR-LOCAL-IP:80/shorter/url
+curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
 ```
 
-### Follow Redirect (no auth required)
-
-```bash
-curl -iL http://SERVER-OR-LOCAL-IP:80/shorter/url/<uuid>
+Response:
+```json
+{"token":"<base64-encoded-token>"}
 ```
 
-## Run Locally
+### Create Short URL (POST /shorter/url, auth required)
 
 ```bash
-docker-compose up -d --build
+curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d "{\"url\":\"https://example.com\"}"
+```
+
+Response:
+```json
+{"id":"<uuid>","url":"https://example.com"}
+```
+
+### Follow Redirect (GET /shorter/url/{uuid}, no auth required)
+
+```bash
+curl.exe -v http://localhost:8000/shorter/url/<uuid>
+```
+
+Returns 302 Found redirecting to the original URL.
+
+## Full Flow Example (cmd.exe)
+
+```batch
+REM 1. Signup
+curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
+
+REM 2. Login — save the token from response
+curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
+
+REM 3. Create short URL — replace <token> with value from step 2
+curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d "{\"url\":\"https://example.com\"}"
+
+REM 4. Follow redirect — replace <uuid> with id from step 3
+curl.exe -v http://localhost:8000/shorter/url/<uuid>
+```
+
+## Full Flow Example (PowerShell)
+
+```powershell
+# 1. Signup
+$body = '{"id":"alice","password_hash":"mypassword"}'
+curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d $body
+
+# 2. Login
+$body = '{"id":"alice","password_hash":"mypassword"}'
+$response = curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d $body
+$token = ($response | ConvertFrom-Json).token
+
+# 3. Create short URL
+$body = '{"url":"https://example.com"}'
+$response = curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer $token" -d $body
+$uuid = ($response | ConvertFrom-Json).id
+
+# 4. Follow redirect
+curl.exe -v "http://localhost:8000/shorter/url/$uuid"
 ```
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `DB_DRIVER` | `postgres` | Database driver (`sqlite3` or `postgres`) |
 | `SERVER_PORT` | `8000` | HTTP server port |
 | `SQL_HOST` | `localhost` | PostgreSQL host |
 | `SQL_PORT` | `5432` | PostgreSQL port |
 | `SQL_USER` | `surl_u` | DB user |
 | `SQL_PASSWORD` | `surl_p` | DB password |
-| `SQL_DATABASE` | `surl_d` | DB name |
+| `SQL_DATABASE` | `surl_d` | DB name (or SQLite file path when `DB_DRIVER=sqlite3`) |
 | `AUTH_SECRET` | - | Secret for token signing |
 | `PASSWORD_SECRET` | - | Secret for password hashing |
 | `AUTH_TTL_MINUTES` | `12000` | Token time-to-live |
 
+## Build
+
+```bash
+go build -o dj_shorturl-go.exe ./cmd/server
+```
+
+For CGO-enabled SQLite support, ensure gcc is in PATH and set `CGO_ENABLED=1`:
+```bash
+set CGO_ENABLED=1
+go build -o dj_shorturl-go.exe ./cmd/server
+```
+
 ## Original Project
 
-Built by [ftamy9](https://github.com/ftamy9). Find the original Django version at [ftamy9/dj_shorturl](https://github.com/ftamy9/dj_shorturl).
+Built by [ftamy9](https://github.com/ftamy9).  
+Original Django version: [ftamy9/dj_shorturl](https://github.com/ftamy9/dj_shorturl)  
+Go port: [ftamy9/dj_shorturl-go](https://github.com/ftamy9/dj_shorturl-go)
