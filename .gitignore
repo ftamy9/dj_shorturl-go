@@ -17,6 +17,11 @@ dj_shorturl
 # Env
 .env
 
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
 # OS
 .DS_Store
 Thumbs.db
