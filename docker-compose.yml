@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: /app/server
+    ports:
+      - "80:8000"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=surl_u
+      - POSTGRES_PASSWORD=surl_p
+      - POSTGRES_DB=surl_d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U surl_u -d surl_d"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
