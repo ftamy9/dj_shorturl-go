@@ -34,6 +34,17 @@ func (h *Handler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	addr := &Address{URL: req.URL}
+
+	existing, err := h.repo.GetByURL(r.Context(), req.URL)
+	if err == nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(CreateAddressResponse{
+			ID:  existing.ID,
+			URL: existing.URL,
+		})
+		return
+	}
+
 	if err := h.repo.Create(r.Context(), addr); err != nil {
 		writeError(w, http.StatusConflict, err.Error())
 		return

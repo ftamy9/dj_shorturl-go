@@ -93,6 +93,7 @@ func runMigrations(db *sql.DB, cfg *config.Config) error {
 				url TEXT NOT NULL,
 				created_at TEXT NOT NULL DEFAULT (datetime('now'))
 			)`,
+			`CREATE UNIQUE INDEX IF NOT EXISTS idx_addresses_url ON addresses(url)`,
 		}
 		for _, m := range migrations {
 			if _, err := db.ExecContext(context.Background(), m); err != nil {
@@ -106,12 +107,12 @@ func runMigrations(db *sql.DB, cfg *config.Config) error {
 				password_hash VARCHAR(128) NOT NULL,
 				create_date TIMESTAMPTZ NOT NULL DEFAULT NOW()
 			)`,
-			`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`,
 			`CREATE TABLE IF NOT EXISTS addresses (
-				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				id UUID PRIMARY KEY,
 				url VARCHAR(32779) NOT NULL,
 				created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 			)`,
+			`CREATE UNIQUE INDEX IF NOT EXISTS idx_addresses_url ON addresses(url)`,
 		}
 		for _, m := range migrations {
 			if _, err := db.ExecContext(context.Background(), m); err != nil {
