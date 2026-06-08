@@ -60,6 +60,7 @@ func main() {
 	mux.HandleFunc("POST /shorter/url", authMw(http.HandlerFunc(addrHandler.HandleCreate)).ServeHTTP)
 	mux.HandleFunc("GET /shorter/url/", addrHandler.HandleRedirect)
 
+
 	addr := ":" + cfg.ServerPort
 	slog.Info("server starting", "addr", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {

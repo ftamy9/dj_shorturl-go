@@ -29,10 +29,12 @@ cmd /c "cd /d C:\Users\farhan\Documents\src\golang\dj_shorturl-go & set DB_DRIVE
 
 ## API Endpoints
 
+All examples use `curl.exe` (works in both PowerShell and cmd.exe).
+
 ### Create User (POST /user/signup, no auth required)
 
-```bash
-curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
+```powershell
+curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
 ```
 
 Response:
@@ -42,8 +44,8 @@ Response:
 
 ### Login (PUT /user/signup, no auth required)
 
-```bash
-curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
+```powershell
+curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
 ```
 
 Response:
@@ -53,8 +55,8 @@ Response:
 
 ### Create Short URL (POST /shorter/url, auth required)
 
-```bash
-curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d "{\"url\":\"https://example.com\"}"
+```powershell
+curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d '{\"url\":\"https://example.com\"}'
 ```
 
 Response:
@@ -64,29 +66,29 @@ Response:
 
 ### Follow Redirect (GET /shorter/url/{uuid}, no auth required)
 
-```bash
+```powershell
 curl.exe -v http://localhost:8000/shorter/url/<uuid>
 ```
 
 Returns 302 Found redirecting to the original URL.
 
-## Full Flow Example (cmd.exe)
+## Full Flow Example (PowerShell - one-liners)
 
-```batch
-REM 1. Signup
-curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
+```powershell
+# 1. Signup
+curl.exe -s -X POST http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
 
-REM 2. Login — save the token from response
-curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d "{\"id\":\"alice\",\"password_hash\":\"mypassword\"}"
+# 2. Login — save the token from response
+curl.exe -s -X PUT http://localhost:8000/user/signup -H "Content-Type: application/json" -d '{\"id\":\"alice\",\"password_hash\":\"mypassword\"}'
 
-REM 3. Create short URL — replace <token> with value from step 2
-curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d "{\"url\":\"https://example.com\"}"
+# 3. Create short URL — replace <token> with value from step 2
+curl.exe -s -X POST http://localhost:8000/shorter/url -H "Content-Type: application/json" -H "Authorization: Bearer <token>" -d '{\"url\":\"https://example.com\"}'
 
-REM 4. Follow redirect — replace <uuid> with id from step 3
+# 4. Follow redirect — replace <uuid> with id from step 3
 curl.exe -v http://localhost:8000/shorter/url/<uuid>
 ```
 
-## Full Flow Example (PowerShell)
+## Full Flow Example (PowerShell - with variables)
 
 ```powershell
 # 1. Signup

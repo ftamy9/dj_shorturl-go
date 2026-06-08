@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const timeFormat = "2006-01-02 15:04:05"
+
 type Repository interface {
 	Create(ctx context.Context, user *BaseUser) error
 	GetByID(ctx context.Context, id string) (*BaseUser, error)
@@ -21,7 +23,7 @@ func NewRepository(db *sql.DB) Repository {
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, user *BaseUser) error {
-	user.CreateDate = time.Now()
+	user.CreateDate = time.Now().Format(timeFormat)
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO base_users (id, password_hash, create_date) VALUES ($1, $2, $3)`,
 		user.ID, user.PasswordHash, user.CreateDate,
