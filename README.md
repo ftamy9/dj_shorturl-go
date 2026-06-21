@@ -146,6 +146,19 @@ set CGO_ENABLED=1
 go build -o dj_shorturl-go.exe ./cmd/server
 ```
 
+## Running Tests
+
+```bash
+go test -v ./...
+```
+
+Or run tests for a specific package:
+
+```bash
+go test -v ./internal/auth/...
+go test -v ./internal/shortener/...
+```
+
 ## Original Project
 
 Built by [ftamy9](https://github.com/ftamy9).  
